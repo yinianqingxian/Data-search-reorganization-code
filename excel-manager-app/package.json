@@ -1,0 +1,43 @@
+{
+  "name": "excel-manager-app",
+  "version": "1.0.0",
+  "description": "Simple Excel Manager Desktop App",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "dev": "electron . --dev",
+    "clean": "rmdir /s /q dist node_modules 2>nul || true",
+    "install-deps": "npm install"
+  },
+  "dependencies": {
+    "electron": "^28.0.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "electron-builder": "^24.6.4"
+  },
+  "build": {
+    "appId": "com.example.excelmanager",
+    "productName": "Excel Manager",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "node_modules/xlsx/**/*",
+      "!**/*.ts",
+      "!**/*.tsx"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "keywords": ["excel", "csv", "data", "filter", "export"],
+  "author": "Your Name",
+  "license": "MIT"
+}

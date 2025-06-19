@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>简化测试版</title>
+</head>
+<body>
+    <h1>文件上传测试</h1>
+    <input type="file" id="testFileInput" accept=".xlsx,.xls,.csv">
+    <div id="testOutput"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        console.log('🎯 简化测试页面加载');
+        console.log('🔍 XLSX库状态:', typeof XLSX !== 'undefined' ? '✅已加载' : '❌未加载');
+
+        document.getElementById('testFileInput').addEventListener('change', function(e) {
+            console.log('🎯 文件选择事件触发');
+            const file = e.target.files[0];
+            if (file) {
+                console.log('📁 选择的文件:', file.name, '大小:', file.size, '类型:', file.type);
+                document.getElementById('testOutput').innerHTML = `
+                    <p>✅ 文件选择成功!</p>
+                    <p>文件名: ${file.name}</p>
+                    <p>大小: ${(file.size/1024).toFixed(2)} KB</p>
+                    <p>类型: ${file.type}</p>
+                `;
+                
+                // 测试文件读取
+                testFileReading(file);
+            }
+        });
+
+        function testFileReading(file) {
+            console.log('🧪 开始测试文件读取...');
+            
+            if (file.name.toLowerCase().endsWith('.csv')) {
+                // 测试CSV读取
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    console.log('📄 CSV文件读取成功，内容长度:', e.target.result.length);
+                    document.getElementById('testOutput').innerHTML += '<p>✅ CSV文件读取成功!</p>';
+                };
+                reader.onerror = function() {
+                    console.error('❌ CSV文件读取失败');
+                    document.getElementById('testOutput').innerHTML += '<p>❌ CSV文件读取失败!</p>';
+                };
+                reader.readAsText(file);
+                
+            } else if (file.name.toLowerCase().match(/\.(xlsx|xls)$/)) {
+                // 测试Excel读取
+                if (typeof XLSX === 'undefined') {
+                    console.error('❌ XLSX库未加载');
+                    document.getElementById('testOutput').innerHTML += '<p>❌ XLSX库未加载!</p>';
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        console.log('📊 开始解析Excel文件...');
+                        const workbook = XLSX.read(e.target.result, {type: 'array'});
+                        console.log('📊 Excel解析成功，工作表:', workbook.SheetNames);
+                        document.getElementById('testOutput').innerHTML += `<p>✅ Excel文件读取成功! 工作表: ${workbook.SheetNames.join(', ')}</p>`;
+                    } catch (error) {
+                        console.error('❌ Excel解析失败:', error);
+                        document.getElementById('testOutput').innerHTML += `<p>❌ Excel解析失败: ${error.message}</p>`;
+                    }
+                };
+                reader.onerror = function() {
+                    console.error('❌ Excel文件读取失败');
+                    document.getElementById('testOutput').innerHTML += '<p>❌ Excel文件读取失败!</p>';
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        }
+    </script>
+</body>
+</html>

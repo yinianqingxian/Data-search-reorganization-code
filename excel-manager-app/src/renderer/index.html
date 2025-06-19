@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel 数据管理器</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/main.css">
+    <style>
+        /* 内嵌关键样式以防外部CSS加载失败 */
+        .status { padding: 12px; margin: 15px 0; border-radius: 6px; display: none; font-weight: 500; line-height: 1.5; }
+        .status.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .status.info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .button:disabled { background: #ccc !important; cursor: not-allowed; }
+        
+        /* 多选列选择器样式 */
+        .column-selector { margin-bottom: 15px; display: none; }
+        .column-selector h3 { margin-bottom: 15px; color: #333; }
+        .column-section { margin-bottom: 20px; padding: 15px; border-radius: 8px; }
+        .recommended-section { background: #e8f5e8; border: 1px solid #4CAF50; }
+        .all-columns-section { background: #f9f9f9; border: 1px solid #ddd; }
+        .control-buttons { margin-bottom: 15px; display: flex; gap: 10px; align-items: center; }
+        .checkbox-container { display: flex; align-items: center; gap: 8px; padding: 6px; border-radius: 4px; transition: background-color 0.2s; margin-bottom: 8px; }
+        .checkbox-container:hover { background-color: #f0f0f0; }
+        .checkbox-container input[type="checkbox"] { width: 16px; height: 16px; }
+        .checkbox-container label { cursor: pointer; flex: 1; font-size: 14px; line-height: 1.4; }
+        .category-group { margin-bottom: 15px; }
+        .category-label { font-weight: bold; color: #555; margin-bottom: 8px; font-size: 14px; }
+        .columns-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; margin-left: 15px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Excel 数据管理器</h1>
+            <p>智能筛选 · 高效导出 · 数据重组</p>
+        </div>
+
+        <div class="content">
+            <!-- 文件上传区域 -->
+            <div class="section">
+                <h2>📁 第一步：上传Excel文件</h2>
+                <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls,.csv" />
+                <div class="help-text">支持 .xlsx、.xls、.csv 格式文件，拖拽文件到此区域也可上传</div>
+                <div id="fileStatus" class="status"></div>
+                
+                <!-- 文件信息显示 -->
+                <div id="fileInfo" class="file-info">
+                    <strong>📄 文件信息</strong>
+                    <div id="fileDetails"></div>
+                </div>
+                
+                <!-- 数据统计显示 -->
+                <div id="dataStats" class="data-stats">
+                    <strong>📈 数据概览</strong>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div id="totalRows" class="stat-number">0</div>
+                            <div class="stat-label">总行数</div>
+                        </div>
+                        <div class="stat-item">
+                            <div id="totalColumns" class="stat-number">0</div>
+                            <div class="stat-label">总列数</div>
+                        </div>
+                        <div class="stat-item">
+                            <div id="cityColumn" class="stat-number">-</div>
+                            <div class="stat-label">筛选列</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 数据筛选组件 -->
+            <div class="section">
+                <h2>🔍 第二步：选择筛选列并筛选数据</h2>
+                
+                <!-- 多选列选择器 -->
+                <div id="columnSelector" class="column-selector">
+                    <!-- 动态生成的内容会插入这里 -->
+                </div>
+                
+                <!-- 匹配模式选择 -->
+                <div style="margin-bottom: 1rem; padding: 1rem; background: var(--primary-50); border-radius: var(--radius-md); border: 1px solid var(--primary-200);">
+                    <label style="font-weight: 600; color: var(--neutral-900); margin-bottom: 0.5rem; display: block; font-size: 0.875rem;">🎯 匹配模式：</label>
+                    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.875rem;">
+                            <input type="radio" name="matchMode" value="exact" checked style="accent-color: var(--primary-600);">
+                            <span>精确匹配（完全相等）</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.875rem;">
+                            <input type="radio" name="matchMode" value="fuzzy" style="accent-color: var(--primary-600);">
+                            <span>模糊匹配（包含关键词）</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.875rem;">
+                            <input type="radio" name="matchMode" value="regex" style="accent-color: var(--primary-600);">
+                            <span>正则表达式</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- 多项搜索选项 -->
+                <div style="margin-bottom: 1rem; padding: 1rem; background: var(--success-50); border-radius: var(--radius-md); border: 1px solid var(--success-200);">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin-bottom: 0.75rem;">
+                        <input type="checkbox" id="multiSearch" checked style="accent-color: var(--success-600);">
+                        <span style="font-weight: 600; color: var(--success-700); font-size: 0.875rem;">🔍 多项搜索（用逗号分隔多个搜索词）</span>
+                    </label>
+                    
+                    <!-- 逻辑模式选择器 -->
+                    <div id="logicModeSelector" style="margin-left: 1.5rem; padding: 0.75rem; background: white; border-radius: var(--radius-sm); border: 1px solid var(--success-200);">
+                        <label style="font-weight: 600; color: var(--neutral-700); margin-bottom: 0.5rem; display: block; font-size: 0.8125rem;">🔗 多项搜索逻辑：</label>
+                        <div style="display: flex; gap: 1rem;">
+                            <label style="display: flex; align-items: center; gap: 0.375rem; cursor: pointer; font-size: 0.8125rem;">
+                                <input type="radio" name="logicMode" value="AND" checked style="accent-color: var(--primary-600);">
+                                <span>AND（同时包含）</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.375rem; cursor: pointer; font-size: 0.8125rem;">
+                                <input type="radio" name="logicMode" value="OR" style="accent-color: var(--primary-600);">
+                                <span>OR（包含任一）</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 搜索输入框 -->
+                <input type="text" id="cityInput" class="text-input" placeholder="请输入搜索内容..." disabled />
+                <div class="help-text">支持多个搜索词（用逗号分隔），如：北京,上海,深圳</div>
+                
+                <!-- 操作按钮 -->
+                <div style="margin-top: 1rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                    <button id="filterBtn" class="button">🔍 开始筛选</button>
+                    <button id="clearFilterBtn" class="button secondary">🔄 清除筛选</button>
+                </div>
+                <div id="filterStatus" class="status"></div>
+            </div>
+
+            <!-- 数据导出 -->
+            <div class="section">
+                <h2>💾 第三步：导出筛选结果</h2>
+                <div class="export-options">
+                    <input type="text" id="filename" class="filename-input" placeholder="输入文件名（不含扩展名）" value="筛选结果" />
+                    <button id="exportCSVBtn" class="button success">💾 导出 CSV</button>
+                    <button id="exportExcelBtn" class="button secondary">📊 导出 Excel兼容</button>
+                </div>
+                <div id="exportStatus" class="status"></div>
+            </div>
+            
+            <!-- 数据预览 -->
+            <div id="results" class="results" style="display: none;">
+                <h3 style="color: var(--neutral-900); margin-bottom: 1rem; font-size: 1.125rem; font-weight: 600;">📋 数据预览</h3>
+                <div id="dataPreview"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script type="module" src="app.js"></script>
+</body>
+</html>
