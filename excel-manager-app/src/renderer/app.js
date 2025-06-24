@@ -3,6 +3,7 @@ import { FileHandler } from './modules/FileHandler.js';
 import { DataProcessor } from './modules/DataProcessor.js';
 import { UIManager } from './modules/UIManager.js';
 import { DataExporter } from './modules/DataExporter.js';
+import { ColumnCalculator } from './modules/ColumnCalculator.js'; // 新增
 
 console.log('🚀 App.js 开始加载...');
 
@@ -18,6 +19,7 @@ class ExcelManager {
         this.dataProcessor = new DataProcessor(this);
         this.uiManager = new UIManager(this);
         this.dataExporter = new DataExporter(this);
+        this.columnCalculator = new ColumnCalculator(this); // 新增
         
         this.init();
     }
@@ -72,60 +74,58 @@ class ExcelManager {
     }
 
     init() {
-        console.log('🚀 初始化ExcelManager...'); // 添加调试信息
-        this.bindEvents();
-        this.updateUI();
-        console.log('✅ Excel 数据管理器已启动');
+        console.log('🚀 初始化Excel管理器...');
+        
+        // 绑定文件处理事件
+        this.fileHandler.bindEvents();
+        
+        // 初始化计算器
+        this.columnCalculator.initCalculator(); // 新增
+        
+        this.bindUIEvents();
+        
+        console.log('✅ Excel管理器初始化完成');
     }
 
-    bindEvents() {
-        console.log('🔗 开始绑定事件...');
-        
-        // 文件上传事件 - 使用更简单的绑定方式
-        const fileInput = document.getElementById('fileInput');
-        if (fileInput) {
-            console.log('✅ 找到文件输入元素，绑定事件');
-            
-            // 移除现有事件监听器
-            fileInput.removeEventListener('change', this.handleFileUpload.bind(this));
-            
-            // 重新绑定
-            fileInput.addEventListener('change', (e) => {
-                console.log('📁 文件change事件触发');
-                this.handleFileUpload(e);
-            });
-            
-            console.log('✅ 文件上传事件绑定完成');
-        } else {
-            console.error('❌ 未找到文件输入元素 #fileInput');
-        }
-        
-        // 其他事件绑定...
+    bindUIEvents() {
+        // 筛选按钮
         const filterBtn = document.getElementById('filterBtn');
         if (filterBtn) {
             filterBtn.addEventListener('click', () => this.handleFilter());
-            console.log('✅ 筛选按钮事件已绑定');
         }
-        
+
+        // 清除筛选按钮
         const clearFilterBtn = document.getElementById('clearFilterBtn');
         if (clearFilterBtn) {
             clearFilterBtn.addEventListener('click', () => this.clearFilter());
-            console.log('✅ 清除筛选按钮事件已绑定');
         }
-        
+
+        // 导出按钮
         const exportCSVBtn = document.getElementById('exportCSVBtn');
         if (exportCSVBtn) {
-            exportCSVBtn.addEventListener('click', () => this.exportCSV());
-            console.log('✅ CSV导出按钮事件已绑定');
+            exportCSVBtn.addEventListener('click', () => this.dataExporter.exportCSV());
         }
-        
+
         const exportExcelBtn = document.getElementById('exportExcelBtn');
         if (exportExcelBtn) {
-            exportExcelBtn.addEventListener('click', () => this.exportExcel());
-            console.log('✅ Excel导出按钮事件已绑定');
+            exportExcelBtn.addEventListener('click', () => this.dataExporter.exportExcel());
         }
-        
-        console.log('🔗 所有事件绑定完成');
+
+        // 计算器切换按钮 - 新增
+        const calcToggleBtn = document.getElementById('calcToggleBtn');
+        if (calcToggleBtn) {
+            calcToggleBtn.addEventListener('click', () => this.columnCalculator.toggleCalculator());
+        }
+    }
+
+    // 文件加载完成后的回调
+    onFileLoaded() {
+        // 显示计算器
+        const calculator = document.getElementById('columnCalculator');
+        if (calculator) {
+            calculator.style.display = 'block';
+            this.columnCalculator.updateCalculatorOptions();
+        }
     }
 
     // 文件上传组件功能

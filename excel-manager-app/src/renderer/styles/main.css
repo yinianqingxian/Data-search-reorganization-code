@@ -498,6 +498,43 @@ body {
     font-style: normal;
 }
 
+/* 计算器样式 */
+.calc-select, .calc-input {
+    padding: 0.5rem;
+    border: 1px solid var(--neutral-300);
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    width: 100%;
+}
+
+.calc-select:focus, .calc-input:focus {
+    outline: none;
+    border-color: var(--primary-500);
+    box-shadow: 0 0 0 2px rgb(14 165 233 / 0.1);
+}
+
+.calc-section {
+    padding: 1rem;
+    background: var(--neutral-50);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--neutral-200);
+}
+
+.calculator-content {
+    max-width: 100%;
+}
+
+/* 运算类型选择器样式 */
+.calculator-content input[type="radio"] + span {
+    padding: 0.25rem 0;
+}
+
+.calculator-content label:has(input[type="radio"]:checked) {
+    background: var(--primary-50);
+    border-color: var(--primary-300);
+    color: var(--primary-700);
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
     body {
